@@ -6,7 +6,8 @@ setup(
     packages=['WebServerPlugin'],
     install_requires=
     [
-        'Coronado'
+        'Coronado',
+        'tornado'
     ],
     author='Mukul Majmudar',
     author_email='mukul@curecompanion.com',

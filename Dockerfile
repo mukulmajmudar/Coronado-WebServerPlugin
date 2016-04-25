@@ -17,17 +17,15 @@ RUN yum install -y \
         make && \
         make install
 
-# Install Coronado dependencies first so Coronado egg update doesn't
-# reinstall all dependencies
+# Install Coronado dependencies first so they can be cached
 RUN pip3 install \
-    tornado \
-    unittest2 \
-    argparse \
-    argh \
     argcomplete \
-    pika \
+    argh \
+    argparse \
     python-dateutil \
-    pylint>=1.5.0
+    tornado>=4.3
+
+RUN pip3 install pylint>=1.5.0
 
 # Install Coronado
 COPY ./Coronado-2.0-py3.5.egg /root/Coronado-2.0-py3.5.egg
