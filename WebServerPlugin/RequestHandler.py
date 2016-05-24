@@ -1,5 +1,6 @@
 import json
 from functools import wraps
+import asyncio
 
 import tornado.web
 
@@ -73,7 +74,7 @@ def withJsonBody(attrName='jsonBody', charset='UTF-8'):
 
     def decorator(func):
         @wraps(func)
-        def wrapper(self, *args, **kwargs):
+        async def wrapper(self, *args, **kwargs):
             contentType, reqCharset = parseContentType(
                     self.request.headers.get('Content-Type'))
             if contentType != 'application/json' or reqCharset != charset:
@@ -84,7 +85,11 @@ def withJsonBody(attrName='jsonBody', charset='UTF-8'):
             except ValueError:
                 raise tornado.web.HTTPError(415)
             else:
-                func(self, *args, **kwargs)
+                result = func(self, *args, **kwargs)
+                if asyncio.iscoroutine(result):
+                    return await result
+                else:
+                    return result
 
         return wrapper
 
