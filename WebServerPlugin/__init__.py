@@ -20,7 +20,8 @@ class Config(ConfigBase):
             'apiVersions',
             'corsExposeHeaders',
             'port',
-            'uri'
+            'uri',
+            'tornadoDebug'
         ] + keys)
 
 
@@ -47,6 +48,9 @@ class Config(ConfigBase):
 
     def _getUri(self):
         return 'http://127.0.0.1:{}'.format(self['port'])
+
+    def _getTornadoDebug(self):
+        return False
 
 
 class AppPlugin(AppPluginBase):
@@ -79,7 +83,8 @@ class AppPlugin(AppPluginBase):
                 for mapping in zip(urls.keys(), urls.values())]
 
         if urlHandlers:
-            self.tornadoApp = tornado.web.Application(urlHandlers)
+            self.tornadoApp = tornado.web.Application(urlHandlers,
+                    debug=self.context['tornadoDebug'])
 
         self.context['tornadoApp'] = self.tornadoApp
 
