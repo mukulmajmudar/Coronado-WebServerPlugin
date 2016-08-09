@@ -1,4 +1,5 @@
 import importlib
+from collections import OrderedDict
 
 import tornado.web
 from tornado.httpserver import HTTPServer
@@ -117,7 +118,7 @@ class AppPlugin(AppPluginBase):
 
 
     def getApiSpecific(self, functionName, *args, **kwargs):
-        result = {}
+        result = OrderedDict()
         for apiVersion in self.context.get('apiVersions', ['1']):
             versionMod = importlib.import_module(
                     self.context['appPackage'].__name__
