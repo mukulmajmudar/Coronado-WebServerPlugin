@@ -1,58 +1,27 @@
 import importlib
 from collections import OrderedDict
+import logging
 
 import tornado.web
 from tornado.httpserver import HTTPServer
-from Coronado.Config import Config as ConfigBase
 from Coronado.Plugin import AppPlugin as AppPluginBase
 
 from .RequestHandler import RequestHandler
 from .WebSocketHandler import WebSocketHandler
 
-class Config(ConfigBase):
+logger = logging.getLogger(__name__)
 
-    def __init__(self, keys=None): 
-        if keys is None:
-            keys = []
-        super().__init__(
-        [
-            'allowedCORSOrigins',
-            'allowedWSOrigins',
-            'apiVersions',
-            'corsExposeHeaders',
-            'port',
-            'uri',
-            'tornadoDebug'
-        ] + keys)
-
-
-    def _getAllowedCORSOrigins(self):
-        '''
-        List of origins allowed to access this server.
-        '''
-        return []
-
-    def _getAllowedWSOrigins(self):
-        '''
-        List of origins allowed to access this server using WebSocket protocol.
-        '''
-        return []
-
-    def _getApiVersions(self):
-        return ['1']
-
-    def _getCorsExposeHeaders(self):
-        return ['Etag']
-
-    def _getPort(self):
-        return 80
-
-    def _getUri(self):
-        return 'http://127.0.0.1:{}'.format(self['port'])
-
-    def _getTornadoDebug(self):
-        return False
-
+# Default config
+config = \
+{
+    'allowedCORSOrigins': [],
+    'allowedWSOrigins': [],
+    'apiVersions': ['1'],
+    'corsExposeHeaders': ['Etag'],
+    'port': 80,
+    'uri': 'http://127.0.0.1',
+    'tornadoDebug': False
+}
 
 class AppPlugin(AppPluginBase):
     context = None
@@ -64,7 +33,7 @@ class AppPlugin(AppPluginBase):
         return 'webServerPlugin'
 
     # pylint: disable=unused-argument
-    def start(self, app, context):
+    def start(self, context):
         self.context = context
 
         # Get URL handlers for each API version
@@ -85,7 +54,7 @@ class AppPlugin(AppPluginBase):
 
         if urlHandlers:
             self.tornadoApp = tornado.web.Application(urlHandlers,
-                    debug=self.context['tornadoDebug'])
+                    debug=self.context['tornadoDebug'], **context)
 
         self.context['tornadoApp'] = self.tornadoApp
 
@@ -95,17 +64,20 @@ class AppPlugin(AppPluginBase):
         # Start listening
         self.httpServer.listen(self.context['port'])
 
-        self.callApiSpecific('start', app, self, self.context)
+        self.context['ioloop'].add_callback(
+                lambda: logger.info('Started web server'))
+
+        self.callApiSpecific('start', self, self.context)
 
 
-    def destroy(self, app, context):
+    def destroy(self, context):
         # Stop accepting new HTTP connections, then shutdown server after a
         # delay. This pattern is suggested by Ben Darnell (a maintainer of
         # Tornado):
         # https://groups.google.com/d/msg/python-tornado/NTJfzETaxeI/MaJ-hvTw4_4J
         self.httpServer.stop()
 
-        self.callApiSpecific('destroy', app, self, self.context)
+        self.callApiSpecific('destroy', self, self.context)
 
 
     def callApiSpecific(self, functionName, *args, **kwargs):

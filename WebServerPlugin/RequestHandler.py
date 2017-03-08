@@ -59,17 +59,6 @@ class RequestHandler(tornado.web.RequestHandler):
         pass
 
 
-    def _getJsonBody(self, charset='UTF-8'):
-        contentType, reqCharset = parseContentType(
-                self.request.headers.get('Content-Type'))
-        if contentType != 'application/json' or reqCharset != charset:
-            raise tornado.web.HTTPError(415)
-        try:
-            return json.loads(self.request.body)
-        except ValueError:
-            raise tornado.web.HTTPError(415)
-
-
 def withJsonBody(attrName='jsonBody', charset='UTF-8'):
 
     def decorator(func):

@@ -1,4 +1,3 @@
-
 def parseContentType(contentType):
     '''
     Parses an HTTP Content-Type header and returns a pair
