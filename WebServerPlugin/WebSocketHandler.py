@@ -3,7 +3,6 @@ import tornado.websocket
 # pylint: disable=abstract-method
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
     context = None
-    ioloop = None
     database = None
     httpClient = None
 

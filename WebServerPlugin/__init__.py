@@ -4,6 +4,8 @@ import logging
 
 import tornado.web
 from tornado.httpserver import HTTPServer
+from tornado.ioloop import IOLoop
+from tornado.platform.asyncio import AsyncIOMainLoop
 from Coronado.Plugin import AppPlugin as AppPluginBase
 
 from .RequestHandler import RequestHandler
@@ -34,6 +36,10 @@ class AppPlugin(AppPluginBase):
 
     # pylint: disable=unused-argument
     def start(self, context):
+        # Install asyncio/tornado bridge if not already initialized
+        if not IOLoop.initialized():
+            AsyncIOMainLoop().install()
+
         self.context = context
 
         # Get URL handlers for each API version
@@ -64,7 +70,7 @@ class AppPlugin(AppPluginBase):
         # Start listening
         self.httpServer.listen(self.context['port'])
 
-        self.context['ioloop'].add_callback(
+        IOLoop.current().add_callback(
                 lambda: logger.info('Started web server'))
 
         self.callApiSpecific('start', self, self.context)

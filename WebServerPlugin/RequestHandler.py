@@ -8,7 +8,6 @@ from .Util import parseContentType
 
 class RequestHandler(tornado.web.RequestHandler):
     context = None
-    ioloop = None
     httpClient = None
 
     def initialize(self, **kwargs):
