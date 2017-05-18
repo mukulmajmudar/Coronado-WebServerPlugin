@@ -1,6 +1,7 @@
 import importlib
 from collections import OrderedDict
 import logging
+import asyncio
 
 import tornado.web
 from tornado.httpserver import HTTPServer
@@ -35,7 +36,7 @@ class AppPlugin(AppPluginBase):
         return 'webServerPlugin'
 
     # pylint: disable=unused-argument
-    def start(self, context):
+    async def start(self, context):
         # Install asyncio/tornado bridge if not already initialized
         if not IOLoop.initialized():
             AsyncIOMainLoop().install()
@@ -73,7 +74,7 @@ class AppPlugin(AppPluginBase):
         IOLoop.current().add_callback(
                 lambda: logger.info('Started web server'))
 
-        self.callApiSpecific('start', self, self.context)
+        await self.callApiSpecific('start', self, self.context)
 
 
     def destroy(self, context):
@@ -86,13 +87,16 @@ class AppPlugin(AppPluginBase):
         self.callApiSpecific('destroy', self, self.context)
 
 
-    def callApiSpecific(self, functionName, *args, **kwargs):
+    async def callApiSpecific(self, functionName, *args, **kwargs):
         for apiVersion in self.context.get('apiVersions', ['1']):
             versionMod = importlib.import_module(
                     self.context['appPackage'].__name__
                     + '.WebServer.v' + apiVersion)
             if hasattr(versionMod, functionName):
-                getattr(versionMod, functionName)(*args, **kwargs)
+                result = getattr(versionMod, functionName)(*args, **kwargs)
+                if asyncio.iscoroutine(result):
+                    await result
+
 
 
     def getApiSpecific(self, functionName, *args, **kwargs):
