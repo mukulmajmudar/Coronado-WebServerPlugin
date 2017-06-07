@@ -77,14 +77,14 @@ class AppPlugin(AppPluginBase):
         await self.callApiSpecific('start', self, self.context)
 
 
-    def destroy(self, context):
+    async def destroy(self, context):
         # Stop accepting new HTTP connections, then shutdown server after a
         # delay. This pattern is suggested by Ben Darnell (a maintainer of
         # Tornado):
         # https://groups.google.com/d/msg/python-tornado/NTJfzETaxeI/MaJ-hvTw4_4J
         self.httpServer.stop()
 
-        self.callApiSpecific('destroy', self, self.context)
+        await self.callApiSpecific('destroy', self, self.context)
 
 
     async def callApiSpecific(self, functionName, *args, **kwargs):
