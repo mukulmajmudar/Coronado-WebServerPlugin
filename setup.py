@@ -7,7 +7,7 @@ setup(
     install_requires=
     [
         'Coronado',
-        'tornado'
+        'tornado==4.5.2'
     ],
     author='Mukul Majmudar',
     author_email='mukul@curecompanion.com',
